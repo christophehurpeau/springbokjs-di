@@ -1,0 +1,30 @@
+{
+  "name": "springbokjs-di",
+  "description": "springbokjs dependency injection library",
+  "keywords": [
+    "springbokjs",
+    "di"
+  ],
+  "version": "0.0.1",
+  "homepage": "http://springbokjs.org",
+  "license": "MIT",
+  "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christophehurpeau/springbokjs-di.git"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha --harmony --recursive -u tdd tests/lib"
+  },
+  "main": "./lib/index.js",
+  "devDependencies": {
+    "es6-shim": "^0.18.0",
+    "gulp": "^3.8",
+    "mocha": "^1.21",
+    "proclaim": "^2.0",
+    "springbokjs-library": "^2.6.1"
+  },
+  "dependencies": {
+    "springbokjs-utils": "^0.5.0"
+  }
+}
