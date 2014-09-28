@@ -4,7 +4,7 @@
 [build-status-url]: https://drone.io/github.com/christophehurpeau/springbokjs-di/latest
 [npm-image]: https://img.shields.io/npm/v/springbokjs-di.svg?style=flat
 [npm-url]: https://npmjs.org/package/springbokjs-di
-[coverage-image]: http://img.shields.io/badge/coverage-100%-brightgreen.svg?style=flat
+[coverage-image]: http://img.shields.io/badge/coverage-79%-yellow.svg?style=flat
 [coverage-url]: http://christophehurpeau.github.io/springbokjs-di/docs/coverage.html
 
 
