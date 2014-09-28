@@ -3,9 +3,12 @@
   "description": "springbokjs dependency injection library",
   "keywords": [
     "springbokjs",
-    "di"
+    "di",
+    "dependency",
+    "injection",
+    "dependency injector"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "http://springbokjs.org",
   "license": "MIT",
   "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",

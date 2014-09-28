@@ -2,7 +2,8 @@
 require('es6-shim');
 var assert = require('proclaim');
 var expect = assert.strictEqual;
-var Di = require('../../lib/').Di;
+var lib = '../../lib' + (process.env.TEST_COV && '-cov' || '') + '/';
+var Di = require(lib).Di;
 test('should load classes in the directory and return the right result', function() {
   var di = new Di();
   return di.directory(__dirname + '/../../samples/').then(function() {
