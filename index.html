@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="springbokjs-di : springbokjs dependency injection">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>springbokjs-di</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/christophehurpeau/springbokjs-di">View on GitHub</a>
+
+          <h1 id="project_title">springbokjs-di</h1>
+          <h2 id="project_tagline">springbokjs dependency injection</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/christophehurpeau/springbokjs-di/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/christophehurpeau/springbokjs-di/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="springbokjs-di----" class="anchor" href="#springbokjs-di----"><span class="octicon octicon-link"></span></a>springbokjs-di  <a href="https://npmjs.org/package/springbokjs-di"><img src="https://img.shields.io/npm/v/springbokjs-di.svg?style=flat" alt="NPM version"></a> <a href="https://drone.io/github.com/christophehurpeau/springbokjs-di/latest"><img src="https://drone.io/github.com/christophehurpeau/springbokjs-di/status.png" alt="Build Status"></a> <a href="http://christophehurpeau.github.io/springbokjs-di/docs/coverage.html"><img src="http://img.shields.io/badge/coverage-100%-brightgreen.svg?style=flat" alt="Coverage"></a>
+</h1>
+
+<p>Dependency injection library</p>
+
+<h2>
+<a name="how-to-use" class="anchor" href="#how-to-use"><span class="octicon octicon-link"></span></a>How to use</h2>
+
+<h3>
+<a name="es5" class="anchor" href="#es5"><span class="octicon octicon-link"></span></a>ES5</h3>
+
+<p><code>classes/ClassA.js</code> a singleton class</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">exports</span><span class="p">.</span><span class="nx">ClassA</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ClassA</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">};</span>
+    <span class="nx">ClassA</span><span class="p">.</span><span class="nx">singleton</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// the di will create a unique instance of the class</span>
+    <span class="nx">ClassA</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sayHello</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Hello '</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s1">'!'</span><span class="p">);</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="nx">ClassA</span><span class="p">;</span>
+<span class="p">})();</span>
+</pre></div>
+
+<p><code>classes/ClassB.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="nx">exports</span><span class="p">.</span><span class="nx">ClassB</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ClassB</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="nx">ClassB</span><span class="p">.</span><span class="nx">dependencies</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">'classA'</span> <span class="p">];</span> <span class="c1">// use the singleton</span>
+    <span class="nx">ClassB</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sayHello</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classA</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="nx">ClassB</span><span class="p">;</span>
+<span class="p">})();</span>
+</pre></div>
+
+<p><code>classes/ClassC.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="nx">exports</span><span class="p">.</span><span class="nx">ClassC</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ClassC</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="p">};</span>
+    <span class="nx">ClassC</span><span class="p">.</span><span class="nx">dependencies</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">'classB'</span><span class="o">:</span> <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">'ClassB'</span><span class="p">,</span> <span class="nx">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s1">'John'</span><span class="p">]</span> <span class="p">}</span> <span class="p">};</span>
+
+    <span class="nx">ClassC</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sayHello</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="nx">ClassC</span><span class="p">;</span>
+<span class="p">})();</span>
+</pre></div>
+
+<p>You can also use the di in the class (if classD is loaded by the di)</p>
+
+<p><code>classes/ClassD.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="nx">exports</span><span class="p">.</span><span class="nx">ClassD</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ClassD</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="p">};</span>
+    <span class="nx">ClassD</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">initialize</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">di</span><span class="p">.</span><span class="nx">createInstance</span><span class="p">(</span><span class="s1">'ClassB'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'John'</span><span class="p">]);</span>
+    <span class="p">};</span>
+
+    <span class="nx">ClassD</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sayHello</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="nx">ClassD</span><span class="p">;</span>
+<span class="p">})();</span>
+</pre></div>
+
+<p><code>app.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">Di</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'springbokjs-di'</span><span class="p">).</span><span class="nx">Di</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">di</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Di</span><span class="p">();</span>
+<span class="nx">di</span><span class="p">.</span><span class="nx">directory</span><span class="p">(</span><span class="s1">'classes/'</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="c1">// load classes from the directory</span>
+    <span class="k">return</span> <span class="nx">di</span><span class="p">.</span><span class="nx">getInitializedInstance</span><span class="p">(</span><span class="s1">'ClassD'</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">classD</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">classD</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+
+</pre></div>
+
+<h3>
+<a name="es6" class="anchor" href="#es6"><span class="octicon octicon-link"></span></a>ES6</h3>
+
+<p><code>classes/ClassA.js</code> a singleton class</p>
+
+<div class="highlight highlight-js"><pre><span class="kr">export</span> <span class="kd">var</span> <span class="nx">singleton</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// the di will create a unique instance of the class</span>
+<span class="kr">export</span> <span class="kr">class</span> <span class="nx">ClassA</span> <span class="p">{</span>
+    <span class="nx">sayHello</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="err">`</span><span class="nx">Hello</span> <span class="nx">$</span><span class="p">{</span> <span class="nx">name</span> <span class="p">}</span><span class="o">!</span><span class="err">'</span><span class="p">);</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+<p><code>classes/ClassB.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="kr">export</span> <span class="kd">var</span> <span class="nx">dependencies</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">'classA'</span> <span class="p">];</span> <span class="c1">// use the singleton</span>
+<span class="kr">export</span> <span class="kr">class</span> <span class="nx">ClassB</span> <span class="p">{</span>
+    <span class="nx">constructor</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">sayHello</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classA</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p><code>classes/ClassC.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="kr">export</span> <span class="kd">var</span> <span class="nx">dependencies</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">'classB'</span><span class="o">:</span> <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">'ClassB'</span><span class="p">,</span> <span class="nx">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s1">'John'</span><span class="p">]</span> <span class="p">};</span>
+<span class="kr">export</span> <span class="kr">class</span> <span class="nx">ClassC</span> <span class="p">{</span>
+    <span class="nx">sayHello</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>You can also use the di in the class (if classD is loaded by the di)</p>
+
+<p><code>classes/ClassC.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="kr">export</span> <span class="nx">classClassD</span> <span class="p">{</span>
+    <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">di</span><span class="p">.</span><span class="nx">createInstance</span><span class="p">(</span><span class="s1">'ClassB'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'John'</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="nx">sayHello</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">classB</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+<p><code>app.js</code></p>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">Di</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'springbokjs-di'</span><span class="p">).</span><span class="nx">Di</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">di</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Di</span><span class="p">();</span>
+<span class="nx">di</span><span class="p">.</span><span class="nx">directory</span><span class="p">(</span><span class="s1">'classes/'</span><span class="p">).</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="c1">// load classes from the directory</span>
+    <span class="k">return</span> <span class="nx">di</span><span class="p">.</span><span class="nx">getInitializedInstance</span><span class="p">(</span><span class="s1">'ClassD'</span><span class="p">).</span><span class="nx">then</span><span class="p">((</span><span class="nx">classD</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">classD</span><span class="p">.</span><span class="nx">sayHello</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">springbokjs-di maintained by <a href="https://github.com/christophehurpeau">christophehurpeau</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
