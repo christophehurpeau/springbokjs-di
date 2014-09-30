@@ -103,7 +103,7 @@ di.directory('classes/').then(function() { // load classes from the directory
 export var singleton = true; // the di will create a unique instance of the class
 export class ClassA {
     sayHello(name) {
-        console.log(`Hello ${ name }!');
+        console.log(`Hello ${ name }!`);
     };
 }
 ```
