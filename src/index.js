@@ -69,7 +69,7 @@ export class Di {
             } while (singletons.length !== 0 && i++ < 10);
 
             if (singletons.length !== 0) {
-                return Promise.reject('Failed to load dependencies (circular ?)');
+                throw new Error('Failed to load dependencies (circular ?)');
             }
             return Promise.all(promises);
         }).then(() => this);
