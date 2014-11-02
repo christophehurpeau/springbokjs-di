@@ -3,94 +3,143 @@ var fs = require('springbokjs-utils/fs');
 export class Di {
     constructor() {
         this._classes = {};
+        this._all = {};
     }
 
-    _forEachDependencies(dependencies, callback) {
-        if (Array.isArray(dependencies)) {
-            dependencies.forEach((key) => callback(key, key));
-        } else {
-            Object.keys(dependencies).forEach((key) => callback(key, dependencies[key]));
+    add(name, value) {
+        this._add(name, value);
+        if (this._classes[name]) {
+            return Promise.resolve();
         }
-    }
-
-    directory(paths) {
-        if (!Array.isArray(paths)) {
-            paths = [ paths ];
-        }
-        var singletons = [];
-        return Promise.all(paths.map((path) => {
-            return fs.readRecursiveDirectory(path, { recursive: true }, (file) => {
-                if (file.filename.slice(-3) !== '.js') {
-                    return;
-                }
-                var className = file.filename.slice(0, -3);
-                var module = require(file.path);
-                this._classes[className] = this[className] = module[className];
-                if (module.dependencies) {
-                    module[className].dependencies = module.dependencies;
-                }
-                if (module.singleton || module[className].singleton) {
-                    singletons.push(className);
-                }
+        return this._resolveDependencies(value, value.dependencies, 0)
+            .then(() => {
+                return value.initialize && value.initialize();
             });
-        })).then(() => {
-            var countMissingDependencies = (dependencies) => {
-                if (!dependencies) {
-                    return 0;
-                }
-                if (Array.isArray(dependencies)) {
-                    return dependencies.filter((key) => this[dependencies[key]] === undefined).length;
-                } else {
-                    return Object.keys(dependencies).filter((key) => this[dependencies[key]] === undefined).length;
-                }
-            };
-
-            var sort = () => {
-                singletons = singletons.sort((a, b) => {
-                    return countMissingDependencies(this._classes[a].dependencies)
-                             - countMissingDependencies(this._classes[b].dependencies);
-                });
-            };
-            var i = 0, promises = [];
-            do {
-                var className = singletons.shift(), Singleton = this._classes[className];
-                if (countMissingDependencies(Singleton.dependencies) !== 0) {
-                    singletons.push(className);
-                    sort();
-                } else {
-                    var instance = this.createInstance(className);
-                    var promise = instance.initialize && instance.initialize();
-                    if (promise) {
-                        promises.push(promise);
-                    }
-                    this[className[0].toLowerCase() + className.substr(1)] = instance;
-                }
-
-            } while (singletons.length !== 0 && i++ < 10);
-
-            if (singletons.length !== 0) {
-                throw new Error('Failed to load dependencies (circular ?)');
-            }
-            return Promise.all(promises);
-        }).then(() => this);
     }
 
     addClass(className, class_) {
-        this._classes[className] = this[className] = class_;
-        if (class_.singleton) {
-            return this.getInitializedInstance(className);
-        }
+        return this.add(className, class_);
     }
 
     get(key) {
         return this[key];
     }
 
-    createInstance(className, args) {
+    directory(paths) {
+        if (!Array.isArray(paths)) {
+            paths = [ paths ];
+        }
+        var objects = [];
+        return Promise.all(paths.map((path) => {
+            return fs.readRecursiveDirectory(path, { recursive: true }, (file) => {
+                if (file.filename.slice(-3) !== '.js') {
+                    return;
+                }
+                var module = require(file.path);
+                var name = file.filename.slice(0, -3);
+                var value = module;
+                if (typeof module === 'object' && module.default) {
+                    value = module.default;
+                    value.dependencies = module.dependencies;
+                }
+                this._add(name, value);
+                if (!this._classes[name]) {
+                    objects.push(value);
+                }
+            });
+        })).then(() => {
+            return this._resolveDependenciesForObjects(objects, 0);
+        }).then(() => {
+            return Promise.all(objects.map((object) => {
+                return object.initialize && object.initialize();
+            }));
+        }).then(() => this);
+    }
+
+    _resolveDependenciesForObjects(objects, _internalCallCount) {
+        var promises = [];
+        objects.forEach((value) => {
+            if (value.dependencies) {
+                promises.push(this._resolveDependencies(value, value.dependencies, _internalCallCount));
+            }
+        });
+        return Promise.all(promises);
+    }
+
+    _resolveDependencies(value, dependencies, _internalCallCount) {
+        if (!dependencies) {
+            return Promise.resolve();
+        }
+        if (_internalCallCount > 20) {
+            throw new Error('Called more than 20 times _resolveDependencies');
+        }
+        var promises = [];
+
+        dependencies.forEach((dependency) => {
+            //console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
+            if (dependency.call || dependency.arguments) {
+                promises.push(this.createInstance(dependency.name, dependency.arguments, _internalCallCount).then((instance) => {
+                    value[dependency.key] = instance;
+                    if (dependency.call) {
+                        Object.keys(dependency.call).forEach((methodName) => {
+                            if (!instance[methodName]) {
+                                throw new Error('Cannot call ' + methodName + ' in class ' + dependency.key);
+                            }
+                            instance[methodName].apply(instance, dependency.call[methodName]);
+                        });
+                    }
+                }));
+            } else {
+                value[dependency.key] = this._all[dependency.name];
+            }
+        });
+
+        return Promise.all(promises);
+    }
+
+    _add(name, value) {
+        this._all[name] = this[name] = value;
+        value.di = this;
+        if (typeof value === 'function' && name[0].toUpperCase() === name[0]) {
+            this._classes[name] = value;
+        }
+        if (value.dependencies) {
+            if (Array.isArray(value.dependencies)) {
+                value.dependencies = value.dependencies.map((v) => {
+                    return {
+                        key: v,
+                        name: v
+                    };
+                });
+            } else {
+                value.dependencies = Object.keys(value.dependencies).map((key) => {
+                    var dependency = value.dependencies[key];
+                    if (typeof dependency === 'string') {
+                        dependency = { name: dependency };
+                    }
+                    dependency.key = key;
+
+                    if (!dependency.name) {
+                        dependency.name = key;
+                        if (dependency.arguments || dependency.call) {
+                            dependency.key = key[0].toLowerCase() + key.substr(1);
+                        }
+                    }
+                    return dependency;
+                });
+            }
+        }
+    }
+
+    createInstance(className, args, _internalCallCount = 0) {
+        //console.log('='.repeat(_internalCallCount) + '> ' + 'Creating instance of ' + className);
         if (!className) {
             throw new Error('Unexpected value for className');
         }
         var instance, Class_ = this._classes[className];
+        if (!Class_) {
+            throw new Error('Class ' + className + ' not found');
+        }
         if (args) {
             instance = Object.create(Class_.prototype);
             Class_.apply(instance, args);
@@ -98,27 +147,27 @@ export class Di {
         } else {
             instance = new Class_();
         }
+        //console.log('='.repeat(_internalCallCount) + '> ' + className, Class_, args, instance);
         instance.di = this;
         if (Class_.dependencies) {
-            this._forEachDependencies(Class_.dependencies, (key, dependency) => {
-                if (typeof dependency === 'string') {
-                    instance[key] = this[dependency];
-                } else if (dependency.name) {
-                    instance[key] = this[dependency.name];
-                } else {
-                    instance[key] = this.createInstance(dependency.className, dependency.arguments);
-                }
-                if (!instance[key]) {
-                    throw new Error('Unable to resolve dependency ' + JSON.stringify(dependency)
-                                                             + ' for class ' + className);
-                }
-            });
+            return this._resolveDependencies(instance, Class_.dependencies, _internalCallCount+1)
+                .then(() => instance.initialize && instance.initialize()).then(() => instance);
         }
-        return instance;
-    }
-
-    getInitializedInstance(className) {
-        var instance = this.createInstance(className);
         return Promise.resolve(instance.initialize && instance.initialize()).then(() => instance);
     }
 }
+
+/*
+this._forEachDependencies(Class_.dependencies, (key, dependency) => {
+    if (typeof dependency === 'string') {
+        instance[key] = this[dependency];
+    } else if (dependency.name) {
+        instance[key] = this[dependency.name];
+    } else {
+        instance[key] = this.createInstance(dependency.className, dependency.arguments);
+    }
+    if (!instance[key]) {
+        throw new Error('Unable to resolve dependency ' + JSON.stringify(dependency)
+                                                 + ' for class ' + className);
+    }
+});*/

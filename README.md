@@ -15,69 +15,73 @@ Dependency injection library
 
 ### ES5
 
-`classes/ClassA.js` a singleton class
+`lib/a.js` a simple object
 
 ```js
-exports.ClassA = (function() {
-    var ClassA = function() {
-
-    };
-    ClassA.singleton = true; // the di will create a unique instance of the class
-    ClassA.prototype.sayHello = function(name) {
-        console.log('Hello ' + name + '!');
-    };
-    return ClassA;
-})();
+exports.sayHello = function(name) {
+    return 'Hello ' + name + '!';
+};
 ```
 
-`classes/ClassB.js`
+`lib/b.js` b has a dependency with a
 
 ```js
-exports.ClassB = (function() {
-    var ClassB = function(name) {
+exports.dependencies = [ 'a' ];
+
+exports.sayHello = function(name) {
+    return this.a.sayHello(name);
+};
+```
+
+`lib/class1.js` For classes, the dependencies are resolved when a class is instancied
+
+```js
+exports.dependencies = [ 'a' ];
+
+exports.default = (function() {
+    var Class1 = function() {
+    };
+    Class1.prototype.setName = function(name) {
         this.name = name;
     };
-    ClassB.dependencies = [ 'classA' ]; // use the singleton
-    ClassB.prototype.sayHello = function() {
-        this.classA.sayHello(this.name);
+    Class1.prototype.sayHello = function() {
+        return this.a.sayHello(this.name);
     };
-    return ClassB;
+    return Class1;
 })();
+
 ```
 
-`classes/ClassC.js`
+`lib/c.js` c has a dependency with a class, and calls a method of the class
 
 ```js
-exports.ClassC = (function() {
-    var ClassC = function() {
-    };
-    ClassC.dependencies = { 'classB': { name: 'ClassB', arguments: ['John'] } };
+exports.dependencies = {
+    class2: {
+        name: 'Class2',
+        // arguments: []
+        call: {
+            setName: ['John'],
+        }
+    }
+};
 
-    ClassC.prototype.sayHello = function() {
-        this.classB.sayHello();
-    };
-    return ClassC;
-})();
+exports.sayHello = function() {
+    return this.class2.sayHello();
+};
 ```
 
-You can also use the di in the class (if classD is loaded by the di)
-
-
-`classes/ClassD.js`
+`lib/d.js` You can also use the di in the class
 
 ```js
-exports.ClassD = (function() {
-    var ClassD = function() {
-    };
-    ClassD.prototype.initialize = function() {
-        this.classB = this.di.createInstance('ClassB', ['John']);
-    };
+exports.initialize = function() {
+    return this.di.createInstance('Class1', ['John'])
+        .then(function(class1) { this.class1 = class1; });
+};
 
-    ClassD.prototype.sayHello = function() {
-        this.classB.sayHello();
-    };
-    return ClassD;
-})();
+exports.sayHello = function() {
+    return this.class1.sayHello();
+};
+
 ```
 
 
@@ -86,9 +90,13 @@ exports.ClassD = (function() {
 ```js
 var Di = require('springbokjs-di').Di;
 var di = new Di();
-di.directory('classes/').then(function() { // load classes from the directory
-    return di.getInitializedInstance('ClassD').then(function(classD) {
-        classD.sayHello();
+di.directory('lib/').then(function() { // load classes from the directory
+    return di.a.then(function(a) {
+        a.sayHello('James');
+    }).then(function() {
+        return di.createInstance('Class1', ['James']).then(function(class1) {
+            class1.sayHello();
+        })
     });
 });
 
@@ -97,56 +105,68 @@ di.directory('classes/').then(function() { // load classes from the directory
 
 ### ES6
 
-`classes/ClassA.js` a singleton class
+`lib/a.js` a simple object
 
 ```js
-export var singleton = true; // the di will create a unique instance of the class
-export class ClassA {
-    sayHello(name) {
-        console.log(`Hello ${ name }!`);
-    };
-}
+export function sayHello(name) {
+    return `Hello ${ name }!`;
+};
 ```
 
-`classes/ClassB.js`
+`lib/b.js` b has a dependency with a
 
 ```js
-export var dependencies = [ 'classA' ]; // use the singleton
-export class ClassB {
-    constructor(name) {
+export var dependencies = [ 'a' ];
+
+export var sayHello = function(name) {
+    return this.a.sayHello(name);
+};
+```
+
+`lib/class1.js` For classes, the dependencies are resolved when a class is instancied
+
+```js
+export var dependencies = [ 'a' ];
+
+export default class Class1 {
+    setName(name) {
         this.name = name;
     }
     sayHello() {
-        this.classA.sayHello(this.name);
+        return this.a.sayHello(this.name);
     }
 }
 ```
 
-`classes/ClassC.js`
+`lib/c.js` c has a dependency with a class, and calls a method of the class
 
 ```js
-export var dependencies = { 'classB': { name: 'ClassB', arguments: ['John'] };
-export class ClassC {
-    sayHello() {
-        this.classB.sayHello();
+export var dependencies = {
+    class2: {
+        name: 'Class2',
+        // arguments: []
+        call: {
+            setName: ['John'],
+        }
     }
-}
+};
+
+export var sayHello = function() {
+    return this.class2.sayHello();
+};
 ```
 
-You can also use the di in the class (if classD is loaded by the di)
-
-
-`classes/ClassC.js`
+`lib/d.js` You can also use the di in the class
 
 ```js
-export classClassD {
-    constructor() {
-        this.classB = this.di.createInstance('ClassB', ['John']);
-    }
-    sayHello() {
-        this.classB.sayHello();
-    };
-}
+export var initialize = function() {
+    return this.di.createInstance('Class1', ['John'])
+        .then((class1) => this.class1 = class1);
+};
+
+export var sayHello = function() {
+    return this.class1.sayHello();
+};
 ```
 
 
@@ -156,8 +176,14 @@ export classClassD {
 var Di = require('springbokjs-di').Di;
 var di = new Di();
 di.directory('classes/').then(() => { // load classes from the directory
-    return di.getInitializedInstance('ClassD').then((classD) => {
-        classD.sayHello();
+    return di.a.then((a) => {
+        a.sayHello('James');
+    }).then(() => {
+        return di.createInstance('Class1', ['James']).then((class1) => {
+            class1.sayHello();
+        })
     });
 });
+
 ```
+
