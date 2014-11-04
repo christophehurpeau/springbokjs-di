@@ -78,17 +78,19 @@ export class Di {
         dependencies.forEach((dependency) => {
             //console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
             if (dependency.call || dependency.arguments) {
-                promises.push(this.createInstance(dependency.name, dependency.arguments, _internalCallCount).then((instance) => {
-                    value[dependency.key] = instance;
-                    if (dependency.call) {
-                        Object.keys(dependency.call).forEach((methodName) => {
-                            if (!instance[methodName]) {
-                                throw new Error('Cannot call ' + methodName + ' in class ' + dependency.key);
-                            }
-                            instance[methodName].apply(instance, dependency.call[methodName]);
-                        });
-                    }
-                }));
+                promises.push(
+                    this.createInstance(dependency.name, dependency.arguments, _internalCallCount).then((instance) => {
+                        value[dependency.key] = instance;
+                        if (dependency.call) {
+                            Object.keys(dependency.call).forEach((methodName) => {
+                                if (!instance[methodName]) {
+                                    throw new Error('Cannot call ' + methodName + ' in class ' + dependency.key);
+                                }
+                                instance[methodName].apply(instance, dependency.call[methodName]);
+                            });
+                        }
+                    })
+                );
             } else {
                 value[dependency.key] = this._all[dependency.name];
             }
