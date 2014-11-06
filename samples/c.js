@@ -4,8 +4,7 @@ exports.dependencies = {
         call: {
             setName: ['John'],
         }
-    },
-    e: 'e'
+    }
 };
 
 exports.sayHello = function() {

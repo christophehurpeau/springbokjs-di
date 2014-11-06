@@ -25,6 +25,10 @@ export class Di {
         return this[key];
     }
 
+    set(key, value) {
+        this._all[key] = this[key] = value;
+    }
+
     directory(paths) {
         if (!Array.isArray(paths)) {
             paths = [ paths ];
@@ -92,6 +96,9 @@ export class Di {
                     })
                 );
             } else {
+                if (!this._all[dependency.name]) {
+                    throw new Error('Failed to resolve dependency ' + dependency.name);
+                }
                 value[dependency.key] = this._all[dependency.name];
             }
         });
