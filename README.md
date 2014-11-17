@@ -88,9 +88,10 @@ exports.sayHello = function() {
 `app.js`
 
 ```js
-var Di = require('springbokjs-di').Di;
+var diUtils = require('springbokjs-di');
+var Di = diUtils.Di;
 var di = new Di();
-di.directory('lib/').then(function() { // load classes from the directory
+diUtils.directory(di, 'lib/').then(function() { // load classes from the directory
     return di.a.then(function(a) {
         a.sayHello('James');
     }).then(function() {
@@ -173,9 +174,10 @@ export var sayHello = function() {
 `app.js`
 
 ```js
-var Di = require('springbokjs-di').Di;
+var diUtils = require('springbokjs-di');
+var Di = diUtils.Di;
 var di = new Di();
-di.directory('classes/').then(() => { // load classes from the directory
+diUtils.directory(di, 'classes/').then(() => { // load classes from the directory
     return di.a.then((a) => {
         a.sayHello('James');
     }).then(() => {

@@ -5,11 +5,12 @@ var assert = require('proclaim');
 var expect = assert.strictEqual;
 var lib = '../../lib' + (process.env.TEST_COV && '-cov' || '') + '/';
 
+var diUtils = require(lib);
 var Di = require(lib).Di;
 
 test('should load classes in the directory and return the right result', function() {
     var di = new Di();
-    return di.directory(__dirname + '/../../samples/').then(function() {
+    return diUtils.directory(di, __dirname + '/../../samples/').then(function() {
         assert.isObject(di.a);
         assert.isObject(di.b);
         assert.isObject(di.c);
