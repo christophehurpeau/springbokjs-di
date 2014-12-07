@@ -1,3 +1,4 @@
+var path = require('path');
 export class Di {
     constructor() {
         this._classes = {};
@@ -27,7 +28,7 @@ export class Di {
         this._all[key] = this[key] = value;
     }
 
-    _addModule(name, module) {
+    addModule(name, module) {
         var value = module;
         if (typeof module === 'object' && module.default) {
             value = module.default;
@@ -40,7 +41,7 @@ export class Di {
     addAll(map) {
         var objects = [];
         Object.keys(map).forEach((name) => {
-            var value = this._addModule(name, map[name]);
+            var value = this.addModule(name, map[name]);
             if (!this._classes[name]) {
                 objects.push(value);
             }
@@ -101,8 +102,21 @@ export class Di {
     _add(name, value) {
         this._all[name] = this[name] = value;
         value.di = this;
-        if (typeof value === 'function' && name[0].toUpperCase() === name[0]) {
+        var basename = path.basename(name);
+        if (typeof value === 'function' && basename[0].toUpperCase() === basename[0]) {
             this._classes[name] = value;
+            if (!value.createInstance) {
+                value.createInstance = this.createInstance.bind(this, name);
+            }
+            if (!value.prototype.resolveDependencies) {
+                var di = this;
+                value.prototype.resolveDependencies = function(_internalCallCount = 0) {
+                    this.resolveDependencies = function() {};
+                    if (value.dependencies) {
+                        return di._resolveDependencies(this, value.dependencies, _internalCallCount + 1);
+                    }
+                };
+            }
         }
         if (value.dependencies) {
             if (Array.isArray(value.dependencies)) {
@@ -151,8 +165,9 @@ export class Di {
         //console.log('='.repeat(_internalCallCount) + '> ' + className, Class_, args, instance);
         instance.di = this;
         if (Class_.dependencies) {
-            return this._resolveDependencies(instance, Class_.dependencies, _internalCallCount+1)
-                .then(() => instance.initialize && instance.initialize()).then(() => instance);
+            return instance.resolveDependencies(_internalCallCount)
+                .then(() => instance.initialize && instance.initialize())
+                .then(() => instance);
         }
         return Promise.resolve(instance.initialize && instance.initialize()).then(() => instance);
     }

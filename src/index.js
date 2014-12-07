@@ -13,7 +13,7 @@ exports.directory = function(di, paths) {
             }
             var module = require(file.path);
             var name = file.filename.slice(0, -3);
-            var value = di._addModule(name, module);
+            var value = di.addModule(name, module);
             value._DI_NAME = name;
             if (!di._classes[name]) {
                 objects.push(value);
