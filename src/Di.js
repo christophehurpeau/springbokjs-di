@@ -119,30 +119,34 @@ export class Di {
             }
         }
         if (value.dependencies) {
-            if (Array.isArray(value.dependencies)) {
-                value.dependencies = value.dependencies.map((v) => {
-                    return {
-                        key: v,
-                        name: v
-                    };
-                });
-            } else {
-                value.dependencies = Object.keys(value.dependencies).map((key) => {
-                    var dependency = value.dependencies[key];
-                    if (typeof dependency === 'string') {
-                        dependency = { name: dependency };
-                    }
-                    dependency.key = key;
+            value.dependencies = this.parseDependencies(value.dependencies);
+        }
+    }
 
-                    if (!dependency.name) {
-                        dependency.name = key;
-                        if (dependency.arguments || dependency.call) {
-                            dependency.key = key[0].toLowerCase() + key.substr(1);
-                        }
+    parseDependencies(dependencies) {
+        if (Array.isArray(dependencies)) {
+            return dependencies.map((v) => {
+                return {
+                    key: v,
+                    name: v
+                };
+            });
+        } else {
+            return Object.keys(dependencies).map((key) => {
+                var dependency = dependencies[key];
+                if (typeof dependency === 'string') {
+                    dependency = { name: dependency };
+                }
+                dependency.key = key;
+
+                if (!dependency.name) {
+                    dependency.name = key;
+                    if (dependency.arguments || dependency.call) {
+                        dependency.key = key[0].toLowerCase() + key.substr(1);
                     }
-                    return dependency;
-                });
-            }
+                }
+                return dependency;
+            });
         }
     }
 
