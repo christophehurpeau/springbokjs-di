@@ -1,8 +1,8 @@
-exports.dependencies = ['a'];
-
-exports.default = (function() {
+exports.Class2 = (function() {
     var Class2 = function() {
     };
+    Class2.dependencies = ['a'];
+
     Class2.prototype.setName = function(name) {
         this.name = name;
     };

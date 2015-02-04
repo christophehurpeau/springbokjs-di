@@ -5,7 +5,7 @@ exports.directory = function(di, paths) {
     if (!Array.isArray(paths)) {
         paths = [ paths ];
     }
-    var objects = [];
+    var singletons = [];
     return Promise.all(paths.map((path) => {
         return fs.readRecursiveDirectory(path, { recursive: true }, (file) => {
             if (file.filename.slice(-3) !== '.js') {
@@ -13,23 +13,14 @@ exports.directory = function(di, paths) {
             }
             var module = require(file.path);
             var name = file.filename.slice(0, -3);
-            var value = di.addModule(name, module);
-            value._DI_NAME = name;
-            if (!di._classes[name]) {
-                objects.push(value);
-            }
+            var values = di.addModule(name, module);
+            Object.keys(values).forEach((key) => {
+                if (values[key].singleton) {
+                    singletons.push(key);
+                }
+            });
         });
     })).then(() => {
-        return di._resolveDependenciesForObjects(objects, 0);
-    }).then(() => {
-        return Promise.all(objects.map((object) => {
-            try {
-                return object.initialize && object.initialize();
-            } catch (e) {
-                var failed = new Error('Failed to initialize ' + object._DI_NAME);
-                failed.previous = e;
-                throw failed;
-            }
-        }));
+        return di._instantiateSingletons(singletons);
     }).then(() => di);
 };

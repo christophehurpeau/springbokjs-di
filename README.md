@@ -15,73 +15,67 @@ Dependency injection library
 
 ### ES5
 
-`lib/a.js` a simple object
+`lib/a.js` a simple singleton
 
 ```js
-exports.sayHello = function(name) {
-    return 'Hello ' + name + '!';
-};
+exports.A = (function() {
+    var A = function() {
+    };
+    A.singleton = true;
+
+    A.prototype.sayHello = function(name) {
+        return 'Hello ' + name + '!';
+    };
+    return A;
+})();
 ```
 
 `lib/b.js` b has a dependency with a
 
 ```js
-exports.dependencies = [ 'a' ];
+exports.B = (function() {
+    var B = function() {
+    };
+    B.singleton = true;
+    B.dependencies = ['a'];
 
-exports.sayHello = function(name) {
-    return this.a.sayHello(name);
-};
+    B.prototype.sayHello = function(name) {
+        return this.a.sayHello(name);
+    };
+    return B;
+})();
 ```
 
-`lib/class1.js` For classes, the dependencies are resolved when a class is instancied
+`lib/class1.js` An example of non singleton class
 
 ```js
-exports.dependencies = [ 'a' ];
-
-exports.default = (function() {
-    var Class1 = function() {
-    };
-    Class1.prototype.setName = function(name) {
+exports.Class1 = (function() {
+    var Class1 = function(name) {
         this.name = name;
     };
     Class1.prototype.sayHello = function() {
-        return this.a.sayHello(this.name);
+        return 'Hello ' + this.name + '!';
     };
     return Class1;
 })();
-
 ```
 
-`lib/c.js` c has a dependency with a class, and calls a method of the class
+`lib/class2.js` For classes, the dependencies are resolved when a class is instancied
 
 ```js
-exports.dependencies = {
-    class2: {
-        name: 'Class2',
-        // arguments: []
-        call: {
-            setName: ['John'],
-        }
-    }
-};
+exports.Class2 = (function() {
+    var Class2 = function() {
+    };
+    Class2.dependencies = ['a'];
 
-exports.sayHello = function() {
-    return this.class2.sayHello();
-};
-```
-
-`lib/d.js` You can also use the di in the class
-
-```js
-exports.initialize = function() {
-    return this.di.createInstance('Class1', ['John'])
-        .then(function(class1) { this.class1 = class1; });
-};
-
-exports.sayHello = function() {
-    return this.class1.sayHello();
-};
-
+    Class2.prototype.setName = function(name) {
+        this.name = name;
+    };
+    Class2.prototype.sayHello = function() {
+        return this.a.sayHello(this.name);
+    };
+    return Class2;
+})();
 ```
 
 
@@ -104,72 +98,66 @@ diUtils.directory(di, 'lib/').then(function() { // load classes from the directo
 ```
 
 
-### ES6
+### ES6 with es6like-class
 
-`lib/a.js` a simple object
+`lib/a.js` a simple singleton
 
 ```js
-export function sayHello(name) {
-    return `Hello ${ name }!`;
-};
+export var A = newClass({
+    static: {
+        singleton: true
+    },
+
+    sayHello(name) {
+        return 'Hello ' + name + '!';
+    };
+});
 ```
 
 `lib/b.js` b has a dependency with a
 
 ```js
-export var dependencies = [ 'a' ];
+export var B = newClass({
+    static: {
+        singleton: true,
+        dependencies: ['a']
+    },
 
-export var sayHello = function(name) {
-    return this.a.sayHello(name);
-};
+    sayHello(name) {
+        return this.a.sayHello(name);
+    };
+});
 ```
 
-`lib/class1.js` For classes, the dependencies are resolved when a class is instancied
+`lib/class1.js` An example of non singleton class
 
 ```js
-export var dependencies = [ 'a' ];
-
-export default class Class1 {
-    setName(name) {
+export class Class1 {
+    constructor(name) {
         this.name = name;
     }
+
     sayHello() {
-        return this.a.sayHello(this.name);
+        return 'Hello ' + this.name + '!';
     }
 }
 ```
 
-`lib/c.js` c has a dependency with a class, and calls a method of the class
+`lib/class2.js` For classes, the dependencies are resolved when a class is instancied
 
 ```js
-export var dependencies = {
-    class2: {
-        name: 'Class2',
-        // arguments: []
-        call: {
-            setName: ['John'],
-        }
+export var Class2 = newClass({
+    static: {
+        dependencies: ['a']
+    },
+    setName(name) {
+        this.name = name;
+    },
+    sayHello() {
+        return this.a.sayHello(this.name);
     }
-};
-
-export var sayHello = function() {
-    return this.class2.sayHello();
-};
+});
 ```
-
-`lib/d.js` You can also use the di in the class
-
-```js
-export var initialize = function() {
-    return this.di.createInstance('Class1', ['John'])
-        .then((class1) => this.class1 = class1);
-};
-
-export var sayHello = function() {
-    return this.class1.sayHello();
-};
-```
-
 
 `app.js`
 

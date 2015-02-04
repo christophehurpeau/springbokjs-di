@@ -1,4 +1,4 @@
-exports.default = (function() {
+exports.Class1 = (function() {
     var Class1 = function(name) {
         this.name = name;
     };
