@@ -92,6 +92,14 @@ export class Di {
             }
             var instance = Object.create(this._classes[className].prototype);
             this._singletons[key] = this._all[key] = this[key] = instance;
+            Object.keys(this._globals).forEach((key) => {
+                Object.defineProperty(instance, key, {
+                    enumerable: false,
+                    writable: false,
+                    configurable: true,
+                    value: this._globals[key]
+                });
+            });
             return instance;
         }).map((instance) => {
             return this.resolveDependencies(instance, 0).then(() => {
@@ -246,7 +254,6 @@ export class Di {
         if (Class_.dependencies) {
             return this._resolveDependencies(instance, Class_.dependencies, _internalCallCount)
                 .then(() => {
-                    console.log('resolved', Class_.dependencies);
                     if (instance.initialize) {
                         console.log(Class_.constructor.displayName + ' initialize method is deprecated');
                         instance.initialize();
