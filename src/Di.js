@@ -38,17 +38,12 @@ export class Di {
     addModule(name, module) {
         var value = module;
 
-        if (typeof module !== 'object') {
-            throw new Error(name + ': should be a library and not a function');
-        }
-
         if (module.dependencies) {
-            console.log('[warn] ' + name + ': dependencies in the module is deprecated');
+            throw new Error(name + ': dependencies in the module is deprecated');
         }
 
-        if (module.default) {
-            console.log('[warn] ' + name + ': default is deprecated');
-            value = module.default;
+        if (module.default || typeof module === 'function') {
+            value = typeof module === 'object' ? module.default : module;
             if (module.dependencies) {
                 Object.defineProperty(value, 'dependencies', {
                     configurable: true,
@@ -266,6 +261,20 @@ export class Di {
             console.log(Class_.constructor.displayName + ' initialize method is deprecated');
             return instance.initialize().then(() => instance);
         }
+
+        Object.defineProperty(instance, 'logger', {
+            get: function() {
+                var logger = this._createLogger(Class_.name);
+                Object.defineProperty(instance, 'logger', {
+                    writable: false,
+                    configurable: false,
+                    value: logger
+                });
+                return logger;
+
+            }
+        });
+
         return Promise.resolve(instance);
     }
 }
