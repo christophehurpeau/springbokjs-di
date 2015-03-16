@@ -38,7 +38,7 @@ export class Di {
     addModule(name, module) {
         var value = module;
 
-        if (module.dependencies) {
+        if (module.dependencies && typeof module !== 'function') {
             throw new Error(name + ': dependencies in the module is deprecated');
         }
 
@@ -144,7 +144,7 @@ export class Di {
                 );
             } else {
                 if (!this._all[dependency.name]) {
-                    throw new Error('Failed to resolve dependency ' + dependency.name);
+                    throw new Error(value.name + ': Failed to resolve dependency ' + dependency.name);
                 }
                 value[dependency.key] = this._all[dependency.name];
             }
@@ -168,9 +168,10 @@ export class Di {
                 value.displayName = name;
             }
             if (!value.prototype.resolveDependencies) {
-                console.log('deprecated, use di.resolveDependencies(value)');
                 var di = this;
                 value.prototype.resolveDependencies = function(_internalCallCount = 0) {
+                    console.log('deprecated, use di.resolveDependencies(value)');
+                    console.trace();
                     this.resolveDependencies = function() {};
                     if (value.dependencies) {
                         try {
