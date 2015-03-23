@@ -8,7 +8,7 @@
     "injection",
     "dependency injector"
   ],
-  "version": "0.6.1",
+  "version": "0.7.0",
   "homepage": "http://springbokjs.org",
   "license": "MIT",
   "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",
@@ -20,12 +20,11 @@
     "test": "node_modules/.bin/mocha --harmony --recursive -u tdd tests/lib"
   },
   "main": "./lib/index.js",
+  "browser": "./lib/browser.js",
   "devDependencies": {
     "es6-shim": "^0.27.1",
-    "gulp": "^3.8",
-    "mocha": "^2.2",
-    "proclaim": "^2.0",
-    "springbokjs-library": "^3.5.2"
+    "proclaim": "^3.0.0",
+    "springbokjs-library": "^4.0.1"
   },
   "dependencies": {
     "springbokjs-utils": "^2.0.1"

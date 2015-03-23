@@ -1,7 +1,9 @@
 var fs = require('springbokjs-utils/fs');
-exports.Di = require('./Di').Di;
+import Di from './Di';
 
-exports.directory = function(di, paths) {
+export { Di };
+
+export var directory = function(di, paths) {
     if (!Array.isArray(paths)) {
         paths = [ paths ];
     }

@@ -1,5 +1,6 @@
 var path = require('path');
-export class Di {
+
+export default class Di {
     constructor() {
         this._classes = {};
         this._singletons = {};
@@ -68,7 +69,8 @@ export class Di {
     addAll(map) {
         var singletons = [];
         Object.keys(map).forEach((name) => {
-            var values = this.addModule(name, map[name]);
+            var key = (function(splitted) { return splitted[splitted.length - 1]; })(name.split('/'))    ;
+            var values = this.addModule(key, map[name]);
             Object.keys(values).forEach((key) => {
                 if (values[key].singleton) {
                     singletons.push(key);
@@ -127,7 +129,7 @@ export class Di {
         var promises = [];
 
         dependencies.forEach((dependency) => {
-            //console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
+            // console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
             if (dependency.call || dependency.arguments) {
                 promises.push(
                     this.createInstance(dependency.name, dependency.arguments, _internalCallCount).then((instance) => {
@@ -177,8 +179,8 @@ export class Di {
                         try {
                             return di._resolveDependencies(this, value.dependencies, _internalCallCount + 1);
                         } catch (err) {
-                            throw new Error('Failed to resolve dependencies for instance of  '
-                                                             + name + ': ' + err.message);
+                            throw new Error('Failed to resolve dependencies for instance of ' +
+                                            name + ': ' + err.message);
                         }
                     }
                 };
@@ -224,7 +226,7 @@ export class Di {
     }
 
     createInstance(className, args, _internalCallCount = 0) {
-        //console.log('='.repeat(_internalCallCount) + '> ' + 'Creating instance of ' + className);
+        // console.log('='.repeat(_internalCallCount) + '> ' + 'Creating instance of ' + className);
         if (!className) {
             throw new Error('Unexpected value for className');
         }
@@ -238,7 +240,7 @@ export class Di {
     createInstanceOf(Class_, args, _internalCallCount = 0) {
         var instance;
         instance = Object.create(Class_.prototype);
-        //console.log('='.repeat(_internalCallCount) + '> ' + className, Class_, args, instance);
+        // console.log('='.repeat(_internalCallCount) + '> ' + className, Class_, args, instance);
         Object.keys(this._globals).forEach((key) => {
             Object.defineProperty(instance, key, {
                 enumerable: false,

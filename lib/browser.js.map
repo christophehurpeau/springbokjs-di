@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/browser.js"],"names":[],"mappings":";;;;;;;;IAAO,EAAE,2BAAM,MAAM;;QAEZ,EAAE,GAAF,EAAE","file":"src/browser.js","sourcesContent":["import Di from './Di';\n\nexport { Di };\n"]}

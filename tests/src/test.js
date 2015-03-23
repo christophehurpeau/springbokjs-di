@@ -2,7 +2,8 @@
 require('es6-shim');
 var assert = require('proclaim');
 var expect = assert.strictEqual;
-var lib = '../../lib' + (process.env.TEST_COV && '-cov' || '') + '/';
+console.log(process.env.TEST_COV);
+var lib = '../../lib' + (process.env.TEST_COV ? '-cov' : '') + '/';
 
 var diUtils = require(lib);
 var Di = require(lib).Di;
