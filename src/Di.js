@@ -128,6 +128,10 @@ export default class Di {
         }
         var promises = [];
 
+        if (!dependencies.forEach) {
+            console.log(dependencies);
+            throw new Error('Invalid dependencies value');
+        }
         dependencies.forEach((dependency) => {
             // console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
             if (dependency.call || dependency.arguments) {
@@ -145,10 +149,23 @@ export default class Di {
                     })
                 );
             } else {
-                if (!this._all[dependency.name]) {
-                    throw new Error(value.name + ': Failed to resolve dependency ' + dependency.name);
-                }
-                value[dependency.key] = this._all[dependency.name];
+                Object.defineProperty(value, dependency.key, {
+                    get: function() {
+                        var dependencyValue = this._all[dependency.name];
+                        if (!dependencyValue) {
+                            throw new Error(value.name + ': Failed to resolve dependency ' + dependency.name);
+                        }
+                        Object.defineProperty(value, dependency.key, {
+                            value: dependencyValue,
+                            writable: false,
+                            configurable: false,
+                            enumerable: false
+                        });
+                        return dependencyValue;
+                    }.bind(this),
+                    configurable: true,
+                    enumerable: false
+                });
             }
         });
 
