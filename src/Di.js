@@ -14,18 +14,10 @@ export default class Di {
 
     add(name, value) {
         this._add(name, value);
-        return Promise.resolve();
     }
 
     addClass(className, class_) {
         this._add(className, class_, true);
-        if (class_.singleton) {
-            return this.createInstance(className).then((instance) => {
-                var key = className[0].toLowerCase() + className.substr(1);
-                this._singletons[key] = this._all[key] = this[key] = instance;
-            });
-        }
-        return Promise.resolve();
     }
 
     get(key) {
@@ -67,51 +59,9 @@ export default class Di {
     }
 
     addAll(map) {
-        var singletons = [];
         Object.keys(map).forEach((name) => {
             var key = (function(splitted) { return splitted[splitted.length - 1]; })(name.split('/'))    ;
-            var values = this.addModule(key, map[name]);
-            Object.keys(values).forEach((key) => {
-                if (values[key].singleton) {
-                    singletons.push(key);
-                }
-            });
-        });
-
-        return this._instantiateSingletons(singletons);
-    }
-
-    _instantiateSingletons(singletons) {
-        var promises = singletons.map((className) => {
-            var key = className[0].toLowerCase() + className.substr(1);
-            if (!this._classes[className]) {
-                throw new Error('Class ' + className + ' not found in the di');
-            }
-            var instance = Object.create(this._classes[className].prototype);
-            this._singletons[key] = this._all[key] = this[key] = instance;
-            Object.keys(this._globals).forEach((key) => {
-                Object.defineProperty(instance, key, {
-                    enumerable: false,
-                    writable: false,
-                    configurable: true,
-                    value: this._globals[key]
-                });
-            });
-            return instance;
-        }).map((instance) => {
-            return this.resolveDependencies(instance, 0).then(() => {
-                if (instance.initialize) {
-                    console.log(instance.constructor.name + ' initialize method is deprecated');
-                    return instance.initialize().then(() => instance);
-                }
-                return instance;
-            });
-        });
-        return Promise.all(promises).then((instances) => {
-            instances.map((instance) => {
-                instance.constructor.call(instance);
-                return instance;
-            });
+            this.addModule(key, map[name]);
         });
     }
 
@@ -121,23 +71,28 @@ export default class Di {
 
     _resolveDependencies(value, dependencies, _internalCallCount) {
         if (!dependencies) {
-            return Promise.resolve();
+            return;
         }
         if (_internalCallCount > 20) {
             throw new Error('Called more than 20 times _resolveDependencies');
         }
-        var promises = [];
 
         if (!dependencies.forEach) {
             console.log(dependencies);
             throw new Error('Invalid dependencies value');
         }
+
         dependencies.forEach((dependency) => {
             // console.log('='.repeat(_internalCallCount) + '> ' + 'Resolving dependency ' + dependency.key);
-            if (dependency.call || dependency.arguments) {
-                promises.push(
-                    this.createInstance(dependency.name, dependency.arguments, _internalCallCount).then((instance) => {
-                        value[dependency.key] = instance;
+            Object.defineProperty(value, dependency.key, {
+                get: function() {
+                    var dependencyValue = this._all[dependency.name];
+                    if (!dependencyValue) {
+                        throw new Error(value.name + ': Failed to resolve dependency ' + dependency.name);
+                    }
+
+                    if (dependency.call || dependency.arguments) {
+                        var instance = this.createInstanceOf(dependencyValue, dependency.arguments, _internalCallCount);
                         if (dependency.call) {
                             Object.keys(dependency.call).forEach((methodName) => {
                                 if (!instance[methodName]) {
@@ -146,30 +101,21 @@ export default class Di {
                                 instance[methodName].apply(instance, dependency.call[methodName]);
                             });
                         }
-                    })
-                );
-            } else {
-                Object.defineProperty(value, dependency.key, {
-                    get: function() {
-                        var dependencyValue = this._all[dependency.name];
-                        if (!dependencyValue) {
-                            throw new Error(value.name + ': Failed to resolve dependency ' + dependency.name);
-                        }
-                        Object.defineProperty(value, dependency.key, {
-                            value: dependencyValue,
-                            writable: false,
-                            configurable: false,
-                            enumerable: false
-                        });
-                        return dependencyValue;
-                    }.bind(this),
-                    configurable: true,
-                    enumerable: false
-                });
-            }
-        });
+                        dependencyValue = instance;
+                    }
 
-        return Promise.all(promises);
+                    Object.defineProperty(value, dependency.key, {
+                        value: dependencyValue,
+                        writable: false,
+                        configurable: false,
+                        enumerable: false
+                    });
+                    return dependencyValue;
+                }.bind(this),
+                configurable: true,
+                enumerable: false
+            });
+        });
     }
 
     _add(name, value, isClass) {
@@ -186,21 +132,24 @@ export default class Di {
             if (!value.displayName) {
                 value.displayName = name;
             }
-            if (!value.prototype.resolveDependencies) {
-                var di = this;
-                value.prototype.resolveDependencies = function(_internalCallCount = 0) {
-                    console.log('deprecated, use di.resolveDependencies(value)');
-                    console.trace();
-                    this.resolveDependencies = function() {};
-                    if (value.dependencies) {
-                        try {
-                            return di._resolveDependencies(this, value.dependencies, _internalCallCount + 1);
-                        } catch (err) {
-                            throw new Error('Failed to resolve dependencies for instance of ' +
-                                            name + ': ' + err.message);
+            if (value.singleton) {
+                var key = name[0].toLowerCase() + name.substr(1);
+                for (var thing of [this._singletons, this._all, this]) {
+                    Object.defineProperty(thing, key, {
+                        enumerable: true,
+                        configurable: true,
+                        get: () => {
+                            var instance = this.createInstanceOf(value);
+                            Object.defineProperty(thing, key, {
+                                enumerable: true,
+                                configurable: true,
+                                wriable: false,
+                                value: instance
+                            });
+                            return instance;
                         }
-                    }
-                };
+                    });
+                }
             }
         }
         if (value.dependencies) {
@@ -255,8 +204,7 @@ export default class Di {
     }
 
     createInstanceOf(Class_, args, _internalCallCount = 0) {
-        var instance;
-        instance = Object.create(Class_.prototype);
+        var instance = Object.create(Class_.prototype);
         // console.log('='.repeat(_internalCallCount) + '> ' + className, Class_, args, instance);
         Object.keys(this._globals).forEach((key) => {
             Object.defineProperty(instance, key, {
@@ -267,20 +215,9 @@ export default class Di {
             });
         });
         if (Class_.dependencies) {
-            return this._resolveDependencies(instance, Class_.dependencies, _internalCallCount)
-                .then(() => {
-                    if (instance.initialize) {
-                        console.log(Class_.constructor.displayName + ' initialize method is deprecated');
-                        instance.initialize();
-                    }
-                })
-                .then(() => instance);
+            this._resolveDependencies(instance, Class_.dependencies, _internalCallCount);
         }
         Class_.apply(instance, args);
-        if (instance.initialize) {
-            console.log(Class_.constructor.displayName + ' initialize method is deprecated');
-            return instance.initialize().then(() => instance);
-        }
 
         Object.defineProperty(instance, 'logger', {
             get: function() {
@@ -295,21 +232,6 @@ export default class Di {
             }
         });
 
-        return Promise.resolve(instance);
+        return instance;
     }
 }
-
-/*
-this._forEachDependencies(Class_.dependencies, (key, dependency) => {
-    if (typeof dependency === 'string') {
-        instance[key] = this[dependency];
-    } else if (dependency.name) {
-        instance[key] = this[dependency.name];
-    } else {
-        instance[key] = this.createInstance(dependency.className, dependency.arguments);
-    }
-    if (!instance[key]) {
-        throw new Error('Unable to resolve dependency ' + JSON.stringify(dependency)
-                                                 + ' for class ' + className);
-    }
-});*/

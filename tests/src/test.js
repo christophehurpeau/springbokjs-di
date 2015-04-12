@@ -21,10 +21,7 @@ test('should load classes in the directory and return the right result', () => {
         expect(di.b.sayHello('Test'), 'Hello Test!');
         expect(di.c.sayHello(), 'Hello John!');
 
-        return Promise.all([
-            di.createInstance('Class1', ['John']).then(function(class1) {
-                expect('Hello John!', class1.sayHello());
-            })
-        ]);
+        var class1 = di.createInstance('Class1', ['John']);
+        expect('Hello John!', class1.sayHello());
     });
 });

@@ -8,7 +8,7 @@
     "injection",
     "dependency injector"
   ],
-  "version": "0.9.0",
+  "version": "0.10.0",
   "homepage": "http://springbokjs.org",
   "license": "MIT",
   "author": "Christophe Hurpeau <christophe@hurpeau.com> (http://christophe.hurpeau.com/)",
@@ -23,7 +23,7 @@
   "browser": "./lib/browser.js",
   "devDependencies": {
     "es6-shim": "^0.27.1",
-    "proclaim": "^3.0.0",
+    "proclaim": "^3.2.1",
     "springbokjs-library": "^4.0.1"
   },
   "dependencies": {
