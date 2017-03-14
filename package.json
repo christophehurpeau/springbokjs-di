@@ -22,9 +22,9 @@
   "main": "./lib/index.js",
   "browser": "./lib/browser.js",
   "devDependencies": {
-    "es6-shim": "^0.27.1",
+    "es6-shim": "^0.35.3",
     "proclaim": "^3.2.1",
-    "springbokjs-library": "^4.0.1"
+    "springbokjs-library": "^17.0.0"
   },
   "dependencies": {
     "springbokjs-utils": "^2.0.1"
