@@ -1,5 +1,7 @@
 # springbokjs-di  [![NPM version][npm-image]][npm-url] [![Build Status][build-status-image]][build-status-url] [![Coverage][coverage-image]][coverage-url]
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/christophehurpeau/springbokjs-di.svg)](https://greenkeeper.io/)
+
 [build-status-image]: https://drone.io/github.com/christophehurpeau/springbokjs-di/status.png
 [build-status-url]: https://drone.io/github.com/christophehurpeau/springbokjs-di/latest
 [npm-image]: https://img.shields.io/npm/v/springbokjs-di.svg?style=flat
